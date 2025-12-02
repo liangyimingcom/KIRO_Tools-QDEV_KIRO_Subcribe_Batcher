@@ -1,4 +1,4 @@
-# AWS IAM Identity Center 用户订阅管理系统
+# KIRO订阅工具 - AWS IAM Identity Center 用户订阅管理系统
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
