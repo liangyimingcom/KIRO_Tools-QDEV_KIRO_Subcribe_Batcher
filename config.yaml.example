@@ -1,0 +1,21 @@
+aws:
+  profile: your-aws-profile        # 你的AWS配置文件名
+  region: us-east-1                # AWS区域
+  identity_center:
+    instance_id: ssoins-xxxxxxxxxx # 你的Identity Center实例ID
+
+groups:
+  kiro: Group_KIRO_eu-central-1    # KIRO组名
+  qdev: Group_QDEV_eu-central-1    # QDEV组名
+
+user_format:
+  username_template: "{employee_id}@your-domain.com"
+  use_new_format: true             # 使用新格式
+
+logging:
+  level: INFO                      # 日志级别: DEBUG/INFO/WARNING/ERROR
+  file: logs/subscription_manager.log
+
+retry:
+  max_attempts: 3                  # 最大重试次数
+  backoff_factor: 2.0              # 退避因子

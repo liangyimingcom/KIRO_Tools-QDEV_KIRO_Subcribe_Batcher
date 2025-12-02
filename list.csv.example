@@ -1,0 +1,5 @@
+工号,姓名,邮箱,订阅项目
+EMP001,张三,zhangsan@example.com,KIRO订阅
+EMP002,李四,lisi@example.com,QDEV订阅
+EMP003,王五,wangwu@example.com,全部订阅
+EMP004,赵六,zhaoliu@example.com,取消订阅/不订阅
