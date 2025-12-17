@@ -37,8 +37,8 @@ class SubscriptionManager:
         self.logger = get_logger("subscription_manager")
         
         # 初始化组件
-        self.csv_parser = CSVParser()
-        self.data_validator = DataValidator()
+        self.csv_parser = CSVParser(self.config)
+        self.data_validator = DataValidator(self.config)
         self.verification_engine = VerificationEngine()
         self.report_generator = ReportGenerator()
         
@@ -93,9 +93,16 @@ class SubscriptionManager:
                 self.logger.setLevel(logging.WARNING)
             
             # 验证max_workers参数
-            if max_workers < 1 or max_workers > 10:
-                self.logger.warning(f"max_workers参数超出范围(1-10)，使用默认值5")
-                max_workers = 5
+            min_workers = self.config.performance.max_workers_min
+            max_workers_limit = self.config.performance.max_workers_max
+            default_workers = self.config.performance.max_workers
+            
+            if max_workers < min_workers or max_workers > max_workers_limit:
+                self.logger.warning(
+                    f"max_workers参数超出范围({min_workers}-{max_workers_limit})，"
+                    f"使用默认值{default_workers}"
+                )
+                max_workers = default_workers
             
             self.logger.info(f"开始处理用户订阅文件: {csv_file}")
             self.logger.info(f"并发线程数: {max_workers}, 显示进度: {show_progress}")
@@ -339,7 +346,7 @@ class SubscriptionManager:
                 update_report = self.report_generator.generate_update_report_with_timeout(
                     all_operations, 
                     performance_data,
-                    timeout=120  # 2分钟超时
+                    timeout=self.config.timeouts.report_generation
                 )
             
             # 保存更新报告

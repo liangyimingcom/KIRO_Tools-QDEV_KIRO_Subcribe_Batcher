@@ -505,7 +505,7 @@ class UserManager:
             existing_usernames = set()
         
         # 创建进度跟踪器
-        progress_tracker = ProgressTracker(len(users), "用户处理", show_progress) if show_progress else None
+        progress_tracker = ProgressTracker(len(users), "用户处理", show_progress, self.config) if show_progress else None
         
         # 速率限制标志
         rate_limit_event = threading.Event()
@@ -579,7 +579,12 @@ class UserManager:
             # 收集已提交任务的结果
             for future, user in futures:
                 try:
-                    result = future.result(timeout=60)  # 60秒超时
+                    # 使用配置中的超时时间
+                    timeout = 60  # 默认值
+                    if self.config and hasattr(self.config, 'timeouts'):
+                        timeout = self.config.timeouts.user_operation
+                    
+                    result = future.result(timeout=timeout)
                     with results_lock:
                         operation_results.append(result)
                         if result.success:
@@ -975,7 +980,7 @@ class UserManager:
         self.logger.info(f"开始并发批量删除{len(users)}个用户，线程数: {max_workers}")
         
         # 创建进度跟踪器
-        progress_tracker = ProgressTracker(len(users), "用户删除", show_progress) if show_progress else None
+        progress_tracker = ProgressTracker(len(users), "用户删除", show_progress, self.config) if show_progress else None
         
         # 速率限制标志
         rate_limit_event = threading.Event()
@@ -1043,7 +1048,12 @@ class UserManager:
             # 收集已提交任务的结果
             for future, user in futures:
                 try:
-                    result = future.result(timeout=60)  # 60秒超时
+                    # 使用配置中的超时时间
+                    timeout = 60  # 默认值
+                    if self.config and hasattr(self.config, 'timeouts'):
+                        timeout = self.config.timeouts.user_operation
+                    
+                    result = future.result(timeout=timeout)
                     with results_lock:
                         operation_results.append(result)
                         if result.success:

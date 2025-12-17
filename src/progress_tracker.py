@@ -20,7 +20,7 @@ class ProgressTracker:
     线程安全：使用Lock保护所有共享数据
     """
     
-    def __init__(self, total: int, phase: str, show_progress: bool = True):
+    def __init__(self, total: int, phase: str, show_progress: bool = True, config=None):
         """
         初始化进度跟踪器
         
@@ -28,6 +28,7 @@ class ProgressTracker:
             total: 总任务数
             phase: 当前阶段名称
             show_progress: 是否显示进度（可用于简化日志模式）
+            config: 配置对象（可选）
         """
         self._total = total
         self._processed = 0
@@ -36,7 +37,13 @@ class ProgressTracker:
         self._lock = threading.Lock()
         self._show_progress = show_progress
         self._last_update_time = 0
-        self._update_interval = 0.5  # 最小更新间隔（秒），避免过于频繁的输出
+        
+        # 从配置获取更新间隔（或使用默认值）
+        if config and hasattr(config, 'performance'):
+            self._update_interval = config.performance.progress_update_interval
+        else:
+            self._update_interval = 0.5  # 默认值：最小更新间隔（秒），避免过于频繁的输出
+        
         self.logger = get_logger("progress_tracker")
     
     def update(self, increment: int = 1):
