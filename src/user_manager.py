@@ -212,9 +212,9 @@ class UserManager:
             
             # 构建用户数据（根据配置选择格式）
             if self._should_use_new_format():
-                # 新格式：工号@haier-saml.com, 工号_中文姓名
+                # 新格式：根据 username_template 配置生成用户名
                 aws_user_data = {
-                    'UserName': username,  # 工号@haier-saml.com
+                    'UserName': username,  # 使用配置模板生成的用户名
                     'DisplayName': f"{user_data.employee_id}_{user_data.name}",  # 工号_中文姓名
                     'Name': {
                         'GivenName': user_data.employee_id,  # 工号
@@ -693,7 +693,13 @@ class UserManager:
         Returns:
             IAM用户信息，如果不存在返回None
         """
-        username = f"{employee_id}@haier-saml.com"
+        # 从配置中获取用户名模板
+        if self.config and hasattr(self.config, 'user_format'):
+            template = self.config.user_format.username_template
+            username = template.format(employee_id=employee_id)
+        else:
+            # 向后兼容：使用默认格式
+            username = f"{employee_id}@haier-saml.com"
         
         try:
             aws_user = self.aws_client.get_user_by_username(username)
@@ -815,8 +821,15 @@ class UserManager:
         
         # 验证用户名格式
         username = user_data.get_username()
-        if not username.endswith('@haier-saml.com'):
-            errors.append("用户名格式错误，应为员工号@haier-saml.com")
+        # 从配置获取用户名后缀进行验证
+        if self.config and hasattr(self.config, 'user_format'):
+            expected_suffix = self.config.user_format.username_suffix
+        else:
+            # 向后兼容：使用默认后缀
+            expected_suffix = '@haier-saml.com'
+        
+        if not username.endswith(expected_suffix):
+            errors.append(f"用户名格式错误，应为员工号{expected_suffix}")
         
         return errors
     
@@ -1159,7 +1172,7 @@ class UserManager:
             
             # 分析需要执行的操作
             users_to_create = []  # CSV中有，IAM中没有
-            users_to_delete = []  # IAM中有，CSV中没有（仅海尔域用户）
+            users_to_delete = []  # IAM中有，CSV中没有（仅配置域名下的可管理用户）
             users_to_update = []  # 两边都有，需要更新
             
             # 找出需要创建的用户
@@ -1172,10 +1185,17 @@ class UserManager:
                     if self._needs_update(csv_user, iam_user):
                         users_to_update.append(csv_user)
             
-            # 找出需要删除的用户（仅海尔域用户）
+            # 找出需要删除的用户（仅配置域名下的可管理用户）
+            # 获取用户名后缀用于判断是否是可管理用户
+            if self.config and hasattr(self.config, 'user_format'):
+                manageable_suffix = self.config.user_format.username_suffix
+            else:
+                # 向后兼容：使用默认后缀
+                manageable_suffix = '@haier-saml.com'
+            
             for username, iam_user in iam_usernames.items():
                 if (username not in csv_usernames and 
-                    username.endswith('@haier-saml.com')):
+                    username.endswith(manageable_suffix)):
                     # 创建一个临时的UserSubscription对象用于删除
                     employee_id = username.split('@')[0]
                     temp_user = UserSubscription(

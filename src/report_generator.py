@@ -11,7 +11,8 @@ from src.logger import get_logger
 class ReportGenerator:
     """报告生成器"""
     
-    def __init__(self):
+    def __init__(self, config=None):
+        self.config = config
         self.logger = get_logger("report_generator")
     
     def generate_update_report_with_timeout(self, operations: List[OperationResult],
@@ -362,14 +363,28 @@ class ReportGenerator:
         
         # 升级前后格式对比说明
         report.append(f"\n## 属性格式说明")
+        
+        # 获取配置的用户名模板用于说明
+        username_example = "工号@your-domain.com"
+        if self.config and hasattr(self.config, 'user_format'):
+            template = self.config.user_format.username_template
+            username_example = template.replace("{employee_id}", "工号")
+        
         report.append(f"\n### 新格式标准")
-        report.append(f"- **Username**: 工号@haier-saml.com")
+        report.append(f"- **Username**: {username_example}")
         report.append(f"- **First name**: 工号")
         report.append(f"- **Last name**: 中文姓名")
         report.append(f"- **Display name**: 工号_中文姓名")
         report.append(f"- **Email**: 保持原有邮箱地址不变")
         
         report.append(f"\n### 升级示例")
+        
+        # 生成具体示例（使用配置的模板）
+        example_username = "20117703@your-domain.com"
+        if self.config and hasattr(self.config, 'user_format'):
+            template = self.config.user_format.username_template
+            example_username = template.format(employee_id="20117703")
+        
         report.append(f"```")
         report.append(f"升级前:")
         report.append(f"  Username: 20117703")
@@ -378,7 +393,7 @@ class ReportGenerator:
         report.append(f"  Last name: 晓莲")
         report.append(f"")
         report.append(f"升级后:")
-        report.append(f"  Username: 20117703@haier-saml.com")
+        report.append(f"  Username: {example_username}")
         report.append(f"  Display name: 20117703_王晓莲")
         report.append(f"  First name: 20117703")
         report.append(f"  Last name: 王晓莲")

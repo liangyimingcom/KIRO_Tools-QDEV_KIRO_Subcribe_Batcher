@@ -91,7 +91,8 @@ class DataValidator:
             
             # 验证邮箱域名
             if user.email and not self.validate_email_domain(user.email):
-                result.add_warning(f"{user_prefix}: 邮箱域名可能不是海尔域名 '{user.email}'")
+                org_name = self.config.validation.organization_name if (self.config and hasattr(self.config, 'validation')) else "允许"
+                result.add_warning(f"{user_prefix}: 邮箱域名可能不在{org_name}的域名列表中 '{user.email}'")
         
         # 统计信息
         total_users = len(users)
@@ -187,38 +188,44 @@ class DataValidator:
     
     def validate_email_domain(self, email: str) -> bool:
         """
-        验证邮箱域名是否为海尔域名
+        验证邮箱域名是否在允许的域名列表中
         
         Args:
             email: 邮箱地址
             
         Returns:
-            是否为海尔域名
+            是否为允许的域名
         """
         if not email:
             return False
         
         email = email.strip().lower()
         
-        # 海尔相关域名
-        haier_domains = [
-            'haier.com',
-            'haier1.com',
-            'haier2.com',
-            'haier3.com',
-            'haier.com.new',
-            'haier.com.new1',
-            'haier.com.new2',
-            'haier.com.new3',
-            'haiergroup.com',
-            'haier.net',
-            'casarte.com',
-            'leader.com.cn'
-        ]
+        # 从配置获取允许的邮箱域名列表
+        allowed_domains = []
+        if self.config and hasattr(self.config, 'validation'):
+            allowed_domains = self.config.validation.allowed_email_domains
+        
+        # 如果没有配置，使用默认的域名列表（向后兼容）
+        if not allowed_domains:
+            allowed_domains = [
+                'haier.com',
+                'haier1.com',
+                'haier2.com',
+                'haier3.com',
+                'haier.com.new',
+                'haier.com.new1',
+                'haier.com.new2',
+                'haier.com.new3',
+                'haiergroup.com',
+                'haier.net',
+                'casarte.com',
+                'leader.com.cn'
+            ]
         
         domain = email.split('@')[1] if '@' in email else ''
         
-        return any(domain.endswith(haier_domain) for haier_domain in haier_domains)
+        return any(domain.endswith(allowed_domain) for allowed_domain in allowed_domains)
     
     def validate_subscription_type(self, subscription_type: str) -> bool:
         """
