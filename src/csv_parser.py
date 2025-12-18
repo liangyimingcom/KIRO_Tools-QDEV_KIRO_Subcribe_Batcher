@@ -11,8 +11,9 @@ from src.logger import get_logger
 class CSVParser:
     """CSV解析器"""
     
-    def __init__(self):
+    def __init__(self, config=None):
         self.logger = get_logger("csv_parser")
+        self.config = config
     
     def parse_subscription_file(self, file_path: str) -> List[UserSubscription]:
         """
@@ -128,6 +129,10 @@ class CSVParser:
                         email=email,
                         subscription_type=subscription_type
                     )
+                    
+                    # 注入配置（如果可用）
+                    if self.config:
+                        user.set_config(self.config)
                     
                     users.append(user)
                     

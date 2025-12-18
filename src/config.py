@@ -46,11 +46,27 @@ class RetryConfig:
 
 
 @dataclass
+class TimeoutConfig:
+    """超时配置"""
+    report_generation: int = 120  # 报告生成超时（秒）
+    user_operation: int = 60  # 用户操作超时（秒）
+
+
+@dataclass
+class ValidationConfig:
+    """验证配置"""
+    max_users_warning: int = 1000  # 用户数量警告阈值
+
+
+@dataclass
 class PerformanceConfig:
     """性能配置"""
     max_workers: int = 5  # 最大并发线程数
+    max_workers_min: int = 1  # 最小并发线程数
+    max_workers_max: int = 10  # 最大并发线程数
     auto_downgrade: bool = True  # 遇到速率限制自动降级
     show_progress: bool = True  # 显示进度信息
+    progress_update_interval: float = 0.5  # 进度更新间隔（秒）
 
 
 @dataclass
@@ -62,6 +78,8 @@ class Config:
     logging: LoggingConfig
     retry: RetryConfig
     performance: PerformanceConfig
+    timeouts: TimeoutConfig
+    validation: ValidationConfig
     
     def __init__(self):
         self.aws = AWSConfig()
@@ -70,6 +88,8 @@ class Config:
         self.logging = LoggingConfig()
         self.retry = RetryConfig()
         self.performance = PerformanceConfig()
+        self.timeouts = TimeoutConfig()
+        self.validation = ValidationConfig()
 
 
 class ConfigManager:
@@ -125,6 +145,8 @@ class ConfigManager:
                 self.config.logging.level = logging_config['level']
             if 'file' in logging_config:
                 self.config.logging.file = logging_config['file']
+            if 'format' in logging_config:
+                self.config.logging.format = logging_config['format']
         
         if 'retry' in config_data:
             retry_config = config_data['retry']
@@ -132,15 +154,35 @@ class ConfigManager:
                 self.config.retry.max_attempts = retry_config['max_attempts']
             if 'backoff_factor' in retry_config:
                 self.config.retry.backoff_factor = retry_config['backoff_factor']
+            if 'initial_delay' in retry_config:
+                self.config.retry.initial_delay = retry_config['initial_delay']
         
         if 'performance' in config_data:
             perf_config = config_data['performance']
             if 'max_workers' in perf_config:
                 self.config.performance.max_workers = perf_config['max_workers']
+            if 'max_workers_min' in perf_config:
+                self.config.performance.max_workers_min = perf_config['max_workers_min']
+            if 'max_workers_max' in perf_config:
+                self.config.performance.max_workers_max = perf_config['max_workers_max']
             if 'auto_downgrade' in perf_config:
                 self.config.performance.auto_downgrade = perf_config['auto_downgrade']
             if 'show_progress' in perf_config:
                 self.config.performance.show_progress = perf_config['show_progress']
+            if 'progress_update_interval' in perf_config:
+                self.config.performance.progress_update_interval = perf_config['progress_update_interval']
+        
+        if 'timeouts' in config_data:
+            timeout_config = config_data['timeouts']
+            if 'report_generation' in timeout_config:
+                self.config.timeouts.report_generation = timeout_config['report_generation']
+            if 'user_operation' in timeout_config:
+                self.config.timeouts.user_operation = timeout_config['user_operation']
+        
+        if 'validation' in config_data:
+            validation_config = config_data['validation']
+            if 'max_users_warning' in validation_config:
+                self.config.validation.max_users_warning = validation_config['max_users_warning']
     
     def _apply_env_overrides(self):
         """应用环境变量覆盖"""
@@ -185,16 +227,28 @@ class ConfigManager:
             },
             'logging': {
                 'level': 'INFO',
-                'file': 'logs/subscription_manager.log'
+                'file': 'logs/subscription_manager.log',
+                'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
             },
             'retry': {
                 'max_attempts': 3,
-                'backoff_factor': 2.0
+                'backoff_factor': 2.0,
+                'initial_delay': 1.0
             },
             'performance': {
                 'max_workers': 5,
+                'max_workers_min': 1,
+                'max_workers_max': 10,
                 'auto_downgrade': True,
-                'show_progress': True
+                'show_progress': True,
+                'progress_update_interval': 0.5
+            },
+            'timeouts': {
+                'report_generation': 120,
+                'user_operation': 60
+            },
+            'validation': {
+                'max_users_warning': 1000
             }
         }
         

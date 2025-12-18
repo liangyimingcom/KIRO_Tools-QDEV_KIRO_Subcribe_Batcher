@@ -10,8 +10,9 @@ from src.logger import get_logger
 class DataValidator:
     """数据验证器"""
     
-    def __init__(self):
+    def __init__(self, config=None):
         self.logger = get_logger("data_validator")
+        self.config = config
         
         # 邮箱正则表达式
         self.email_pattern = re.compile(
@@ -248,8 +249,13 @@ class DataValidator:
         """
         result = self.validate_user_data(users)
         
+        # 获取最大用户警告阈值（从配置或使用默认值）
+        max_users_warning = 1000  # 默认值
+        if self.config and hasattr(self.config, 'validation'):
+            max_users_warning = self.config.validation.max_users_warning
+        
         # 额外的批量验证逻辑
-        if len(users) > 1000:
+        if len(users) > max_users_warning:
             result.add_warning(f"用户数量较多({len(users)})，处理可能需要较长时间")
         
         # 统计订阅类型分布

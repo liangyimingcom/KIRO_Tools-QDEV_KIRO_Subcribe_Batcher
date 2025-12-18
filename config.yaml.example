@@ -9,13 +9,30 @@ groups:
   qdev: Group_QDEV_eu-central-1    # QDEV组名
 
 user_format:
-  username_template: "{employee_id}@your-domain.com"
+  username_template: "{employee_id}@your-domain.com"  # 用户名模板
   use_new_format: true             # 使用新格式
 
 logging:
   level: INFO                      # 日志级别: DEBUG/INFO/WARNING/ERROR
   file: logs/subscription_manager.log
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"  # 日志格式
 
 retry:
   max_attempts: 3                  # 最大重试次数
   backoff_factor: 2.0              # 退避因子
+  initial_delay: 1.0               # 初始重试延迟（秒）
+
+performance:
+  max_workers: 5                   # 默认并发线程数
+  max_workers_min: 1               # 最小并发线程数
+  max_workers_max: 10              # 最大并发线程数
+  auto_downgrade: true             # 遇到速率限制自动降级
+  show_progress: true              # 显示进度信息
+  progress_update_interval: 0.5    # 进度更新间隔（秒）
+
+timeouts:
+  report_generation: 120           # 报告生成超时时间（秒）
+  user_operation: 60               # 用户操作超时时间（秒）
+
+validation:
+  max_users_warning: 1000          # 用户数量警告阈值

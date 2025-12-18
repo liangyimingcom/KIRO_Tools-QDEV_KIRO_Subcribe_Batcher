@@ -31,19 +31,38 @@ class UserSubscription:
     name: str
     email: str
     subscription_type: str
+    _config: Optional[object] = None  # 配置对象（可选）
+    
+    def set_config(self, config):
+        """设置配置对象"""
+        self._config = config
     
     def get_username(self) -> str:
         """获取IAM Identity Center用户名"""
+        if self._config and hasattr(self._config, 'user_format'):
+            # 使用配置中的模板
+            template = self._config.user_format.username_template
+            return template.format(employee_id=self.employee_id)
+        # 默认格式（向后兼容）
         return f"{self.employee_id}@haier-saml.com"
     
     def get_target_groups(self) -> List[str]:
         """根据订阅类型获取目标组列表"""
+        # 获取组名（从配置或使用默认值）
+        if self._config and hasattr(self._config, 'groups'):
+            kiro_group = self._config.groups.kiro
+            qdev_group = self._config.groups.qdev
+        else:
+            # 默认组名（向后兼容）
+            kiro_group = "Group_KIRO_eu-central-1"
+            qdev_group = "Group_QDEV_eu-central-1"
+        
         if self.subscription_type == SubscriptionType.KIRO.value:
-            return ["Group_KIRO_eu-central-1"]
+            return [kiro_group]
         elif self.subscription_type == SubscriptionType.QDEV.value:
-            return ["Group_QDEV_eu-central-1"]
+            return [qdev_group]
         elif self.subscription_type == SubscriptionType.ALL.value:
-            return ["Group_KIRO_eu-central-1", "Group_QDEV_eu-central-1"]
+            return [kiro_group, qdev_group]
         else:  # NONE
             return []
     
