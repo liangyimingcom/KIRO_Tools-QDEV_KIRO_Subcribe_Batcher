@@ -9,8 +9,9 @@ groups:
   qdev: Group_QDEV_eu-central-1    # QDEV组名
 
 user_format:
-  username_template: "{employee_id}@your-domain.com"  # 用户名模板
-  use_new_format: true             # 使用新格式
+  username_template: "{employee_id}@your-domain.com"  # 用户名模板，{employee_id}会被替换为实际工号
+  username_suffix: "@your-domain.com"                 # 用户名后缀，用于验证和过滤可管理用户
+  use_new_format: true                                # 使用新格式（工号@domain, 工号_姓名）
 
 logging:
   level: INFO                      # 日志级别: DEBUG/INFO/WARNING/ERROR
@@ -36,3 +37,17 @@ timeouts:
 
 validation:
   max_users_warning: 1000          # 用户数量警告阈值
+  allowed_email_domains:           # 允许的邮箱域名列表（用于邮箱验证）
+    - haier.com
+    - haier1.com
+    - haier2.com
+    - haier3.com
+    - haier.com.new
+    - haier.com.new1
+    - haier.com.new2
+    - haier.com.new3
+    - haiergroup.com
+    - haier.net
+    - casarte.com
+    - leader.com.cn
+  organization_name: "组织"        # 组织名称，用于日志和警告消息

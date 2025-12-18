@@ -26,6 +26,7 @@ class GroupConfig:
 class UserFormatConfig:
     """用户格式配置"""
     username_template: str = "{employee_id}@haier-saml.com"
+    username_suffix: str = "@haier-saml.com"  # 用户名后缀，用于验证和过滤
     use_new_format: bool = True  # 是否使用新的用户属性格式
 
 
@@ -56,6 +57,27 @@ class TimeoutConfig:
 class ValidationConfig:
     """验证配置"""
     max_users_warning: int = 1000  # 用户数量警告阈值
+    allowed_email_domains: list = None  # 允许的邮箱域名列表
+    organization_name: str = "海尔"  # 组织名称
+    
+    def __post_init__(self):
+        """初始化默认值"""
+        if self.allowed_email_domains is None:
+            # 默认的海尔域名列表（向后兼容）
+            self.allowed_email_domains = [
+                'haier.com',
+                'haier1.com',
+                'haier2.com',
+                'haier3.com',
+                'haier.com.new',
+                'haier.com.new1',
+                'haier.com.new2',
+                'haier.com.new3',
+                'haiergroup.com',
+                'haier.net',
+                'casarte.com',
+                'leader.com.cn'
+            ]
 
 
 @dataclass
@@ -136,6 +158,8 @@ class ConfigManager:
             user_format_config = config_data['user_format']
             if 'username_template' in user_format_config:
                 self.config.user_format.username_template = user_format_config['username_template']
+            if 'username_suffix' in user_format_config:
+                self.config.user_format.username_suffix = user_format_config['username_suffix']
             if 'use_new_format' in user_format_config:
                 self.config.user_format.use_new_format = user_format_config['use_new_format']
         
@@ -183,6 +207,10 @@ class ConfigManager:
             validation_config = config_data['validation']
             if 'max_users_warning' in validation_config:
                 self.config.validation.max_users_warning = validation_config['max_users_warning']
+            if 'allowed_email_domains' in validation_config:
+                self.config.validation.allowed_email_domains = validation_config['allowed_email_domains']
+            if 'organization_name' in validation_config:
+                self.config.validation.organization_name = validation_config['organization_name']
     
     def _apply_env_overrides(self):
         """应用环境变量覆盖"""
@@ -222,7 +250,8 @@ class ConfigManager:
                 'qdev': 'Group_QDEV_eu-central-1'
             },
             'user_format': {
-                'username_template': '{employee_id}@haier-saml.com',
+                'username_template': '{employee_id}@your-domain.com',
+                'username_suffix': '@your-domain.com',
                 'use_new_format': True
             },
             'logging': {
@@ -248,7 +277,22 @@ class ConfigManager:
                 'user_operation': 60
             },
             'validation': {
-                'max_users_warning': 1000
+                'max_users_warning': 1000,
+                'allowed_email_domains': [
+                    'haier.com',
+                    'haier1.com',
+                    'haier2.com',
+                    'haier3.com',
+                    'haier.com.new',
+                    'haier.com.new1',
+                    'haier.com.new2',
+                    'haier.com.new3',
+                    'haiergroup.com',
+                    'haier.net',
+                    'casarte.com',
+                    'leader.com.cn'
+                ],
+                'organization_name': '组织'
             }
         }
         

@@ -40,7 +40,7 @@ class SubscriptionManager:
         self.csv_parser = CSVParser(self.config)
         self.data_validator = DataValidator(self.config)
         self.verification_engine = VerificationEngine()
-        self.report_generator = ReportGenerator()
+        self.report_generator = ReportGenerator(self.config)
         
         # AWS相关组件（延迟初始化）
         self.aws_client = None
@@ -55,7 +55,7 @@ class SubscriptionManager:
                 self.aws_client = AWSClient(self.config)
                 self.user_manager = UserManager(self.aws_client, self.config)
                 self.group_manager = GroupManager(self.aws_client, self.config)
-                self.user_attribute_upgrader = UserAttributeUpgrader(self.aws_client)
+                self.user_attribute_upgrader = UserAttributeUpgrader(self.aws_client, self.config)
                 
                 self.logger.info("AWS组件初始化成功")
                 
@@ -562,7 +562,7 @@ def main():
     process_parser.add_argument('--dry-run', action='store_true', help='试运行模式，不执行实际操作')
     process_parser.add_argument('--removeusers', action='store_true', help='删除用户模式，删除CSV文件中列出的用户')
     process_parser.add_argument('--syncusers', action='store_true', help='同步用户模式，同步CSV文件与IAM Identity Center中的用户')
-    process_parser.add_argument('--update2ver0928', action='store_true', help='属性升级模式，将用户属性升级到新格式（工号@haier-saml.com）')
+    process_parser.add_argument('--update2ver0928', action='store_true', help='属性升级模式，将用户属性升级到配置的新用户名格式（如 工号@domain）')
     
     # 性能和日志控制参数
     log_group = process_parser.add_mutually_exclusive_group()

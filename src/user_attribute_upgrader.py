@@ -15,8 +15,9 @@ from .logger import get_logger
 class UserAttributeUpgrader:
     """用户属性升级器"""
     
-    def __init__(self, aws_client):
+    def __init__(self, aws_client, config=None):
         self.aws_client = aws_client
+        self.config = config
         self.logger = get_logger("user_attribute_upgrader")
     
     def upgrade_user_attributes(self, users: List[IAMUser], csv_users: List[UserSubscription], 
@@ -106,7 +107,7 @@ class UserAttributeUpgrader:
             用户更新数据
         """
         # 新格式属性
-        new_username = csv_user.get_username()  # 工号@haier-saml.com
+        new_username = csv_user.get_username()  # 根据配置模板生成的用户名
         new_first_name = csv_user.employee_id   # 工号
         new_last_name = csv_user.name           # 中文姓名
         new_display_name = f"{csv_user.employee_id}_{csv_user.name}"  # 工号_中文姓名
@@ -227,8 +228,18 @@ class UserAttributeUpgrader:
         Returns:
             员工号或None
         """
-        # 匹配 工号@haier-saml.com 格式
-        match = re.match(r'^([A-Za-z0-9]+)@haier-saml\.com$', username)
+        # 获取配置的用户名后缀
+        if self.config and hasattr(self.config, 'user_format'):
+            suffix = self.config.user_format.username_suffix
+        else:
+            # 向后兼容：使用默认后缀
+            suffix = '@haier-saml.com'
+        
+        # 匹配配置的用户名格式 (工号@domain)
+        # 动态构建正则表达式，转义特殊字符
+        escaped_suffix = re.escape(suffix)
+        pattern = r'^([A-Za-z0-9]+)' + escaped_suffix + r'$'
+        match = re.match(pattern, username)
         if match:
             return match.group(1)
         
